@@ -1,58 +1,38 @@
-alert("GO");
+import { draw_bar } from './bar.js'
+import { getProjectWeight } from './plan.js'
 
-// set the dimensions and margins of the graph
-const margin = {top: 10, right: 30, bottom: 90, left: 40},
-    width = 460 - margin.left - margin.right,
-    height = 450 - margin.top - margin.bottom;
+function draw_project_weight() {
+  // Get parent uuid
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  var uuid = urlParams.get("uuid")
+  var width = urlParams.get("width")
+  var height = urlParams.get("height")
+  var zero = urlParams.get("zero")
+  var index_only = urlParams.get("index_only")
 
-// append the svg object to the body of the page
-const svg = d3.select("#my_dataviz")
-  .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+  // Get project weight
+  var obj_project_weight = {};
+  try {
+    obj_project_weight = getProjectWeight(uuid);
+  } catch(e) {
+    console.log(e);
+  }
 
-// Parse the Data
-d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/7_OneCatOneNum_header.csv").then( function(data) {
+  // Zero draw
+  var zero_draw_flag = false;
+  if (zero == "true"){
+    zero_draw_flag = true;
+  }
 
+  var index_only_flag = false;
+  if (index_only == "true"){
+    index_only_flag = true;
+  }
 
-// X axis
-const x = d3.scaleBand()
-  .range([ 0, width ])
-  .domain(data.map(d => d.Country))
-  .padding(0.2);
-svg.append("g")
-  .attr("transform", `translate(0,${height})`)
-  .call(d3.axisBottom(x))
-  .selectAll("text")
-    .attr("transform", "translate(-10,0)rotate(-45)")
-    .style("text-anchor", "end");
+  var array_weight_colors = ["#e5243b", "#DDA63A", "#4C9F38", "#C5192D", "#FF3A21", "#26BDE2", "#FCC30B", "#A21942", "#FD6925", "#DD1367", "#FD9D24", "#BF8B2E", "#3F7E44", "#0A97D9", "#56C02B", "#00689D", "#19486A", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1", "#0075A1"]
+  draw_bar("my_dataviz", obj_project_weight, width, height, array_weight_colors, index_only_flag, zero_draw_flag);
+}
 
-// Add Y axis
-const y = d3.scaleLinear()
-  .domain([0, 13000])
-  .range([ height, 0]);
-svg.append("g")
-  .call(d3.axisLeft(y));
-
-// Bars
-svg.selectAll("mybar")
-  .data(data)
-  .join("rect")
-    .attr("x", d => x(d.Country))
-    .attr("width", x.bandwidth())
-    .attr("fill", "#69b3a2")
-    // no bar at the beginning thus:
-    .attr("height", d => height - y(0)) // always equal to 0
-    .attr("y", d => y(0))
-
-// Animation
-svg.selectAll("rect")
-  .transition()
-  .duration(800)
-  .attr("y", d => y(d.Value))
-  .attr("height", d => height - y(d.Value))
-  .delay((d,i) => {console.log(i); return i*100})
-
-})
+// task uuid, zero draw
+draw_project_weight();
